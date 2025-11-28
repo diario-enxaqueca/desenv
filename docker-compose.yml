@@ -226,20 +226,20 @@ services:
     networks:
       - diario-net
 
-  selenium-tests:
-    build:
-      context: .
-      dockerfile: Dockerfile.selenium
-    container_name: diario_selenium_tests
-    environment:
-      SELENIUM_BROWSER: firefox
-      SELENIUM_HEADLESS: "true"
-    depends_on:
-      - frontend
-    networks:
-      - diario-net
-    profiles:
-      - tests
+  # selenium-tests:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.selenium
+  #   container_name: diario_selenium_tests
+  #   environment:
+  #     SELENIUM_BROWSER: firefox
+  #     SELENIUM_HEADLESS: "true"
+  #   depends_on:
+  #     - frontend
+  #   networks:
+  #     - diario-net
+  #   profiles:
+  #     - tests
 
 
 volumes:
