@@ -1,0 +1,250 @@
+services:
+
+  db:
+    image: mysql:8
+    container_name: diario_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DB}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./backend/mysql-init:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+    networks:
+      - diario-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+  backend:
+    build: ./backend
+    container_name: diario_backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DB: ${MYSQL_DB}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_USE_SSL: ${MYSQL_USE_SSL}
+      MYSQL_SSL_CA: ${MYSQL_SSL_CA}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      APP_HOST: ${APP_HOST}
+      APP_PORT: ${APP_PORT}
+      AUTH_PORT: ${AUTH_PORT}
+      ENVIRONMENT: ${ENVIRONMENT}
+      DEBUG: ${DEBUG}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_SERVER: ${MAIL_SERVER}
+      MAIL_STARTTLS: ${MAIL_STARTTLS}
+      MAIL_SSL_TLS: ${MAIL_SSL_TLS}
+      VITE_AUTH_URL: ${VITE_AUTH_URL}
+      VITE_BACKEND_URL: ${VITE_BACKEND_URL}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    networks:
+      - diario-net
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import sys,urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2); sys.exit(0)\""]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 20s
+
+  auth:
+    build:
+      context: ./autenticacao
+      dockerfile: Dockerfile
+    container_name: diario_auth
+    command: python -m uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DB: ${MYSQL_DB}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_USE_SSL: ${MYSQL_USE_SSL}
+      MYSQL_SSL_CA: ${MYSQL_SSL_CA}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      APP_HOST: ${APP_HOST}
+      APP_PORT: ${APP_PORT}
+      AUTH_PORT: ${AUTH_PORT}
+      ENVIRONMENT: ${ENVIRONMENT}
+      DEBUG: ${DEBUG}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_SERVER: ${MAIL_SERVER}
+      MAIL_STARTTLS: ${MAIL_STARTTLS}
+      MAIL_SSL_TLS: ${MAIL_SSL_TLS}
+      VITE_AUTH_URL: ${VITE_AUTH_URL}
+      VITE_BACKEND_URL: ${VITE_BACKEND_URL}
+    ports:
+      - "8001:8001"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./autenticacao:/app
+    networks:
+      - diario-net
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import sys,urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health', timeout=2); sys.exit(0)\""]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_BACKEND_URL: http://backend:8000/api
+        VITE_AUTH_URL: http://auth:8001/api/auth
+        BACKEND_HOST: http://backend:8000
+        AUTH_HOST: http://auth:8001
+    container_name: diario_frontend
+    environment:
+      BACKEND_URL: http://backend:8000
+      AUTH_URL: http://auth:8001
+      BACKEND_SSL_VERIFY: "off"
+      AUTH_SSL_VERIFY: "off"
+    ports:
+      - "3000:80"
+    networks:
+      - diario-net
+    depends_on:
+      - backend
+      - auth
+
+  lint:
+    build: .
+    container_name: diario_lint
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: pylint --disable=C0114,C0115,C0116 --score=y .
+
+  tests:
+    build: ./backend
+    container_name: diario_tests
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DB: ${MYSQL_DB}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_USE_SSL: ${MYSQL_USE_SSL}
+      MYSQL_SSL_CA: ${MYSQL_SSL_CA}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      APP_HOST: ${APP_HOST}
+      APP_PORT: ${APP_PORT}
+      AUTH_PORT: ${AUTH_PORT}
+      ENVIRONMENT: ${ENVIRONMENT}
+      DEBUG: ${DEBUG}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_SERVER: ${MAIL_SERVER}
+      MAIL_STARTTLS: ${MAIL_STARTTLS}
+      MAIL_SSL_TLS: ${MAIL_SSL_TLS}
+      VITE_AUTH_URL: ${VITE_AUTH_URL}
+      VITE_BACKEND_URL: ${VITE_BACKEND_URL}
+    command: pytest --maxfail=1 --disable-warnings -q
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    networks:
+      - diario-net
+
+  tests-auth:
+    build: ./autenticacao
+    container_name: diario_tests_auth
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DB: ${MYSQL_DB}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_USE_SSL: ${MYSQL_USE_SSL}
+      MYSQL_SSL_CA: ${MYSQL_SSL_CA}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      APP_HOST: ${APP_HOST}
+      APP_PORT: ${APP_PORT}
+      AUTH_PORT: ${AUTH_PORT}
+      ENVIRONMENT: ${ENVIRONMENT}
+      DEBUG: ${DEBUG}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_SERVER: ${MAIL_SERVER}
+      MAIL_STARTTLS: ${MAIL_STARTTLS}
+      MAIL_SSL_TLS: ${MAIL_SSL_TLS}
+      VITE_AUTH_URL: ${VITE_AUTH_URL}
+      VITE_BACKEND_URL: ${VITE_BACKEND_URL}
+    command: pytest --maxfail=1 --disable-warnings -q
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./autenticacao:/app
+    networks:
+      - diario-net
+
+  selenium-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.selenium
+    container_name: diario_selenium_tests
+    environment:
+      SELENIUM_BROWSER: firefox
+      SELENIUM_HEADLESS: "true"
+    depends_on:
+      - frontend
+    networks:
+      - diario-net
+    profiles:
+      - tests
+
+
+volumes:
+  mysql-data:
+
+networks:
+  diario-net:
+    driver: bridge

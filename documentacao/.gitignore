@@ -1,0 +1,11 @@
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Dependências e ambientes virtuais
+node_modules/
+venv/
+
+# Arquivos temporários
+*.log
+*.tmp

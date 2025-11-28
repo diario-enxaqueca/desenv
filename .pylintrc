@@ -1,0 +1,20 @@
+[MASTER]
+# Add repository root to sys.path so pylint can resolve package imports when
+# running inside the lint container.
+init-hook='import sys, os; sys.path.insert(0, os.getcwd())'
+
+# Ignore third-party code
+ignore=node_modules
+
+# Disable import-error globally for this repo's lint run inside the container.
+# Also disable docstring requirements
+disable=E0401,C0114,C0115,C0116
+
+# E0401: import-error
+# C0114: missing-module-docstring
+# C0115: missing-class-docstring
+# C0116: missing-function-docstring
+
+# Keep line-length conservative
+max-line-length=100
+

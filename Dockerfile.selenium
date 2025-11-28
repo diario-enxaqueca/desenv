@@ -1,0 +1,32 @@
+# Selenium tests container
+FROM python:3.11-slim
+
+# Install system dependencies for Selenium and Firefox
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg \
+    ca-certificates \
+    firefox-esr \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install GeckoDriver for Firefox
+RUN wget -q -O /tmp/geckodriver.tar.gz https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz \
+    && tar -xzf /tmp/geckodriver.tar.gz -C /usr/local/bin \
+    && rm /tmp/geckodriver.tar.gz
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and install Python dependencies
+COPY requirements-selenium.txt .
+RUN pip install --no-cache-dir -r requirements-selenium.txt
+
+# Copy test files
+COPY frontend/tests-selenium/ ./tests-selenium/
+
+# Set environment variables for headless Firefox
+ENV MOZ_HEADLESS=1
+ENV MOZ_WEBRENDER=0
+
+# Run tests
+CMD ["pytest", "tests-selenium/", "-v", "--tb=short"]
