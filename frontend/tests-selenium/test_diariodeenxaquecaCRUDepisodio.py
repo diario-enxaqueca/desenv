@@ -2,20 +2,19 @@
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
 class TestDiariodeenxaquecaCRUDepisodio():
-    def setup_method(self, method):
+    def setup_method(self, _):
         self.driver = webdriver.Firefox()
         self.vars = {}
-    
-    def teardown_method(self, method):
+
+    def teardown_method(self, _):
         self.driver.quit()
-    
+
     def test_diariodeenxaquecaCRUDepisodio(self):
         print("=" * 60)
         print("INICIANDO TESTE CRUD DE EPISÓDIOS DE ENXAQUECA")
@@ -174,4 +173,3 @@ class TestDiariodeenxaquecaCRUDepisodio():
         print("\n" + "=" * 60)
         print("TESTE CRUD DE EPISÓDIOS CONCLUÍDO!")
         print("=" * 60)
-    

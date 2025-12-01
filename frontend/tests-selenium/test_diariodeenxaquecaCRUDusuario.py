@@ -65,11 +65,11 @@ class TestDiariodeenxaquecaCRUDusuario():
         # Tentar diferentes seletores para o link de cadastro
         try:
             self.driver.find_element(By.LINK_TEXT, "Cadastre-se").click()
-        except:  # pylint: disable=bare-except
+        except Exception:  # pylint: disable=broad-except
             try:
                 self.driver.find_element(By.PARTIAL_LINK_TEXT,
                                          "Cadastre").click()
-            except:  # pylint: disable=bare-except
+            except Exception:  # pylint: disable=broad-except
                 # Procurar por qualquer link que contenha "cadastro" ou similar
                 links = self.driver.find_elements(By.TAG_NAME, "a")
                 for link in links:
@@ -79,7 +79,7 @@ class TestDiariodeenxaquecaCRUDusuario():
                         link.click()
                         break
                 else:
-                    raise Exception("Link de cadastro não encontrado")
+                    raise ValueError("Link de cadastro não encontrado")
         print("Página de cadastro acessada")
         time.sleep(2)
 
@@ -236,13 +236,13 @@ class TestDiariodeenxaquecaCRUDusuario():
                                          ".flex > .text-primary-foreground"
                                          ).click()
                 print("Usuário excluído com sucesso")
-            except:  # pylint: disable=bare-except
+            except Exception:  # pylint: disable=broad-except
                 # Usar JavaScript click como fallback
                 button = self.driver.find_element(
                     By.CSS_SELECTOR, ".flex > .text-primary-foreground")
                 self.driver.execute_script("arguments[0].click();", button)
                 print("Usuário excluído com sucesso (via JavaScript)")
-        except:  # pylint: disable=bare-except
+        except Exception:  # pylint: disable=broad-except
             print("Aviso: Exclusão do usuário pode não estar "
                   "disponível - continuando com verificação")
         time.sleep(3)
@@ -265,7 +265,7 @@ class TestDiariodeenxaquecaCRUDusuario():
             self.driver.find_element(By.ID, "email")
             print("Confirmação: Login falhou - usuário foi excluído "
                   "com sucesso!")
-        except:  # pylint: disable=bare-except
+        except Exception:  # pylint: disable=broad-except
             print("Erro: Login não falhou como esperado")
 
         print("\n" + "=" * 60)

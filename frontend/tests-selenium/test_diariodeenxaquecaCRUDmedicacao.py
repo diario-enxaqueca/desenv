@@ -3,20 +3,16 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 
 class TestDiariodeenxaquecaCRUDmedicacao():
-    def setup_method(self, method):
+    def setup_method(self, _):
         self.driver = webdriver.Firefox()
         self.vars = {}
-    
-    def teardown_method(self, method):
+
+    def teardown_method(self, _):
         self.driver.quit()
-    
+
     def test_diariodeenxaquecaCRUDmedicacao(self):
         print("=" * 60)
         print("INICIANDO TESTE CRUD COMPLETO DE MEDICAÇÃO")
@@ -60,21 +56,21 @@ class TestDiariodeenxaquecaCRUDmedicacao():
         # Tentar diferentes seletores para o link de cadastro
         try:
             self.driver.find_element(By.LINK_TEXT, "Cadastre-se").click()
-        except:  # pylint: disable=bare-except
+        except Exception:  # pylint: disable=broad-except
             try:
                 self.driver.find_element(By.PARTIAL_LINK_TEXT,
                                          "Cadastre").click()
-            except:  # pylint: disable=bare-except
+            except Exception:  # pylint: disable=broad-except
                 # Procurar por qualquer link que contenha "cadastro" ou similar
                 links = self.driver.find_elements(By.TAG_NAME, "a")
                 for link in links:
                     if "cadastre" in link.text.lower() or \
-                        "registro" in link.text.lower() or "signup" in \
-                        link.text.lower():
+                            "registro" in link.text.lower() or "signup" in \
+                            link.text.lower():
                         link.click()
                         break
                 else:
-                    raise Exception("Link de cadastro não encontrado")
+                    raise ValueError("Link de cadastro não encontrado")  # noqa: E501
         print("Página de cadastro acessada")
         time.sleep(2)
 

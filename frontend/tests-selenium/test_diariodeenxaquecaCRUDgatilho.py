@@ -9,13 +9,13 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 class TestDiariodeenxaquecaCRUDgatilho():
-    def setup_method(self, method):
+    def setup_method(self, _):
         self.driver = webdriver.Firefox()
         self.vars = {}
-    
-    def teardown_method(self, method):
+
+    def teardown_method(self, _):
         self.driver.quit()
-    
+
     def test_diariodeenxaquecaCRUDgatilho(self):
         print("=" * 60)
         print("INICIANDO TESTE CRUD DE GATILHOS DE ENXAQUECA")
